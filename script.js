@@ -1,3 +1,10 @@
+// ---------- auth gate ----------
+// If not logged in, bounce to login page.
+if (!isAuthed()) {
+    setFlash("로그인이 필요합니다");
+    window.location.replace("login.html");
+}
+
 // ---------- constants ----------
 const COLS = 10;
 const ROWS = 20;
@@ -65,16 +72,110 @@ const nctx = nextCanvas.getContext("2d");
 const scoreEl = document.getElementById("score");
 const levelEl = document.getElementById("level");
 const linesEl = document.getElementById("lines");
+const bestScoreEl = document.getElementById("bestScore");
+const bestHolderEl = document.getElementById("bestHolder");
 
 const overlay = document.getElementById("overlay");
 const overlayTitle = document.getElementById("overlayTitle");
 const overlaySub = document.getElementById("overlaySub");
 
+const userBadgeEl = document.getElementById("userBadge");
+const logoutBtn = document.getElementById("logoutBtn");
+const toastEl = document.getElementById("toast");
+
 // ---------- state ----------
 let board, current, next, bag, score, lines, level, gameOver, paused;
 let lastTime = 0;
 let dropAccum = 0;
+let scoreSubmitted = false; // 한 게임당 1회만 제출
 
+// ---------- toast ----------
+let toastTimer;
+function toast(message, type = "") {
+    if (!toastEl) return;
+    toastEl.textContent = message;
+    toastEl.className = `toast ${type}`;
+    toastEl.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { toastEl.hidden = true; }, 2400);
+}
+
+// ---------- top-bar wiring ----------
+const email = getEmail();
+if (email) {
+    userBadgeEl.textContent = email;
+    userBadgeEl.hidden = false;
+}
+logoutBtn.hidden = false;
+logoutBtn.addEventListener("click", async () => {
+    const r = getRefresh();
+    if (r) {
+        try {
+            await fetch(`${API_BASE}/auth/logout`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ refresh_token: r }),
+            });
+        } catch (_) { /* best-effort */ }
+    }
+    clearTokens();
+    setFlash("로그아웃되었습니다");
+    window.location.replace("login.html");
+});
+
+// ---------- highest score from server ----------
+async function loadHighest() {
+    try {
+        const res = await publicFetch("/scores/highest");
+        if (!res.ok) {
+            bestScoreEl.textContent = "—";
+            return;
+        }
+        const data = await res.json();
+        if (data == null) {
+            bestScoreEl.textContent = "0";
+            bestHolderEl.textContent = "아직 기록 없음";
+            return;
+        }
+        bestScoreEl.textContent = data.score.toLocaleString();
+        bestHolderEl.textContent = `by ${data.email}`;
+    } catch (_) {
+        bestScoreEl.textContent = "—";
+        bestHolderEl.textContent = "서버 응답 없음";
+    }
+}
+loadHighest();
+
+// ---------- score submit on game over ----------
+async function submitScore() {
+    if (scoreSubmitted) return;
+    if (score <= 0) return; // 아무것도 안 하고 끝난 경우 굳이 저장 X
+    scoreSubmitted = true;
+    try {
+        const res = await authedFetch("/scores", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ score, lines, level }),
+        });
+        if (!res.ok) {
+            toast(`점수 저장 실패: ${await readError(res)}`, "error");
+            scoreSubmitted = false; // 재시도 가능하도록
+            return;
+        }
+        toast("점수 저장 완료", "success");
+        loadHighest(); // 갱신
+    } catch (err) {
+        if (err.message === "Unauthorized") {
+            setFlash("세션이 만료되었습니다. 다시 로그인하세요.");
+            window.location.replace("login.html");
+            return;
+        }
+        toast(`네트워크 오류: ${err.message}`, "error");
+        scoreSubmitted = false;
+    }
+}
+
+// ---------- game core ----------
 function emptyBoard() {
     return Array.from({ length: ROWS }, () => Array(COLS).fill(null));
 }
@@ -96,7 +197,6 @@ function clonePiece(type) {
     return {
         type,
         shape,
-        // center near top middle
         x: Math.floor((COLS - N) / 2),
         y: type === "I" ? -1 : 0,
     };
@@ -136,7 +236,6 @@ function lockPiece() {
             const by = current.y + y;
             const bx = current.x + x;
             if (by < 0) {
-                // piece locked partially above board → game over
                 triggerGameOver();
                 return;
             }
@@ -154,7 +253,7 @@ function clearLines() {
             board.splice(y, 1);
             board.unshift(Array(COLS).fill(null));
             cleared++;
-            y++; // re-check same index after shift
+            y++;
         }
     }
     if (cleared > 0) {
@@ -178,7 +277,6 @@ function spawnNext() {
 }
 
 function dropInterval() {
-    // gravity in ms — speeds up with level
     return Math.max(80, 800 - (level - 1) * 70);
 }
 
@@ -230,7 +328,6 @@ function drawCell(c, x, y, color, ghost = false) {
     }
     c.fillStyle = color;
     c.fillRect(px, py, CELL, CELL);
-    // inner highlight
     c.fillStyle = "rgba(255,255,255,0.15)";
     c.fillRect(px, py, CELL, 3);
     c.fillRect(px, py, 3, CELL);
@@ -265,7 +362,6 @@ function drawBoard() {
         }
     }
     if (current) {
-        // ghost piece
         let ghostY = 0;
         while (!collides(current, 0, ghostY + 1)) ghostY++;
         for (let y = 0; y < current.shape.length; y++) {
@@ -275,7 +371,6 @@ function drawBoard() {
                 if (gy >= 0) drawCell(ctx, current.x + x, gy, COLORS[current.type], true);
             }
         }
-        // active piece
         for (let y = 0; y < current.shape.length; y++) {
             for (let x = 0; x < current.shape[y].length; x++) {
                 if (!current.shape[y][x]) continue;
@@ -292,7 +387,6 @@ function drawNext() {
     const shape = next.shape;
     const N = shape.length;
     const size = 24;
-    // compute tight bounding box to center the piece
     let minX = N, maxX = -1, minY = N, maxY = -1;
     for (let y = 0; y < N; y++) {
         for (let x = 0; x < N; x++) {
@@ -331,20 +425,18 @@ function updateStats() {
     linesEl.textContent = lines;
 }
 
-// ---------- game flow ----------
+// ---------- overlay / game flow ----------
 function showOverlay(title, sub) {
     overlayTitle.textContent = title;
     overlaySub.textContent = sub;
     overlay.hidden = false;
 }
-
-function hideOverlay() {
-    overlay.hidden = true;
-}
+function hideOverlay() { overlay.hidden = true; }
 
 function triggerGameOver() {
     gameOver = true;
     showOverlay("GAME OVER", "R 키로 재시작");
+    submitScore(); // 비동기로 점수 전송 → 최고점수 갱신
 }
 
 function reset() {
@@ -355,9 +447,9 @@ function reset() {
     level = 1;
     gameOver = false;
     paused = false;
+    scoreSubmitted = false;
     next = nextFromBag();
     current = nextFromBag();
-    // shuffle so first preview isn't always the post-spawn one
     drawNext();
     updateStats();
     hideOverlay();
@@ -399,28 +491,13 @@ document.addEventListener("keydown", (e) => {
     if (gameOver || paused) return;
 
     switch (e.key) {
-        case "ArrowLeft":
-            move(-1);
-            break;
-        case "ArrowRight":
-            move(1);
-            break;
-        case "ArrowDown":
-            softDrop();
-            dropAccum = 0;
-            break;
-        case "ArrowUp":
-            rotate();
-            break;
-        case " ":
-            e.preventDefault();
-            hardDrop();
-            dropAccum = 0;
-            break;
-        default:
-            return;
+        case "ArrowLeft":  move(-1); break;
+        case "ArrowRight": move(1);  break;
+        case "ArrowDown":  softDrop(); dropAccum = 0; break;
+        case "ArrowUp":    rotate(); break;
+        case " ":          e.preventDefault(); hardDrop(); dropAccum = 0; break;
+        default: return;
     }
-    // prevent page scroll on arrow / space
     if (["ArrowLeft", "ArrowRight", "ArrowDown", "ArrowUp", " "].includes(e.key)) {
         e.preventDefault();
     }

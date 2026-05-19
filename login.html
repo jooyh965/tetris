@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인 · TETRIS</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-body">
+    <main class="auth-wrapper">
+        <section class="auth-card">
+            <header class="auth-header">
+                <h1>TETRIS</h1>
+                <p class="auth-sub">이메일로 로그인하고 점수를 기록하세요</p>
+            </header>
+
+            <div class="auth-tabs" role="tablist">
+                <button type="button" class="auth-tab active" data-tab="login" role="tab">로그인</button>
+                <button type="button" class="auth-tab" data-tab="signup" role="tab">회원가입</button>
+            </div>
+
+            <form id="loginForm" class="auth-form" data-pane="login">
+                <label>
+                    <span>이메일</span>
+                    <input type="email" name="email" required autocomplete="email" autofocus>
+                </label>
+                <label>
+                    <span>비밀번호</span>
+                    <input type="password" name="password" required minlength="8" maxlength="128" autocomplete="current-password">
+                </label>
+                <button type="submit" class="btn-primary auth-submit">로그인</button>
+            </form>
+
+            <form id="signupForm" class="auth-form" data-pane="signup" hidden>
+                <label>
+                    <span>이메일</span>
+                    <input type="email" name="email" required autocomplete="email">
+                </label>
+                <label>
+                    <span>비밀번호 <em>(8자 이상)</em></span>
+                    <input type="password" name="password" required minlength="8" maxlength="128" autocomplete="new-password">
+                </label>
+                <label>
+                    <span>비밀번호 확인</span>
+                    <input type="password" name="password2" required minlength="8" maxlength="128" autocomplete="new-password">
+                </label>
+                <button type="submit" class="btn-primary auth-submit">회원가입</button>
+            </form>
+
+            <p class="auth-note">백엔드는 Render 무료 플랜이라 첫 요청이 ~30초 걸릴 수 있어요.</p>
+        </section>
+    </main>
+
+    <div id="toast" class="toast" hidden></div>
+
+    <script src="api.js"></script>
+    <script src="auth.js"></script>
+</body>
+</html>

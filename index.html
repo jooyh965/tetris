@@ -248,11 +248,94 @@
         @media (max-width: 640px) {
             .preview { transform: scale(0.85); }
             .controls { padding: 18px; gap: 8px 14px; }
+            .landing-topbar { right: 14px; top: 14px; }
         }
 
         @media (prefers-reduced-motion: reduce) {
             .float-blocks span { animation: none; }
             .hero h1 { animation: none; }
+        }
+
+        /* ---------- landing-topbar (login state) ---------- */
+        .landing-topbar {
+            position: fixed;
+            top: 18px;
+            right: 22px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+        .landing-topbar > * { pointer-events: auto; }
+        .landing-topbar[hidden] { display: none; }
+
+        .user-badge-landing {
+            padding: 6px 12px;
+            background: rgba(26, 29, 46, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            color: var(--text);
+            max-width: 220px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .auth-link {
+            display: inline-block;
+            padding: 6px 14px;
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: color 0.15s ease, border-color 0.15s ease;
+        }
+        .auth-link:hover {
+            color: var(--accent-2);
+            border-color: var(--accent-2);
+        }
+
+        /* ---------- best score card on landing ---------- */
+        .best-card {
+            margin: 32px auto 36px;
+            max-width: 380px;
+            padding: 18px 24px;
+            background: linear-gradient(135deg, rgba(124, 131, 255, 0.18), rgba(255, 126, 182, 0.15));
+            border: 1px solid rgba(255, 126, 182, 0.32);
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: center;
+            text-align: center;
+        }
+        .best-card-label {
+            font-size: 0.72rem;
+            letter-spacing: 0.2em;
+            color: var(--text-muted);
+        }
+        .best-card-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin: 2px 0;
+        }
+        .best-card-holder {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100%;
         }
     </style>
 </head>
@@ -260,6 +343,12 @@
     <div class="float-blocks" aria-hidden="true">
         <span></span><span></span><span></span><span></span><span></span><span></span>
     </div>
+
+    <header class="landing-topbar">
+        <span id="userBadge" class="user-badge-landing" hidden></span>
+        <a id="loginLink" class="auth-link" href="login.html" hidden>로그인</a>
+        <button id="logoutBtn" class="auth-link" type="button" hidden>로그아웃</button>
+    </header>
 
     <div class="wrap">
         <!-- ============ HERO ============ -->
@@ -270,7 +359,14 @@
                 클래식한 블록 퍼즐을 브라우저에서 바로.<br>
                 설치 없이 즉시 플레이하세요.
             </p>
-            <a class="play-btn" href="play.html">
+
+            <div id="bestCard" class="best-card">
+                <span class="best-card-label">전체 최고점수</span>
+                <span id="bestScore" class="best-card-value">—</span>
+                <span id="bestHolder" class="best-card-holder">불러오는 중…</span>
+            </div>
+
+            <a class="play-btn" href="play.html" id="playBtn">
                 PLAY <span class="arrow">→</span>
             </a>
 
@@ -368,5 +464,77 @@
             © 2026 jooyh965 · KOSA 바이브 코딩 과정
         </footer>
     </div>
+
+    <script src="api.js"></script>
+    <script>
+        // ---- top bar: login state ----
+        const $userBadge = document.getElementById("userBadge");
+        const $loginLink = document.getElementById("loginLink");
+        const $logoutBtn = document.getElementById("logoutBtn");
+        const $playBtn = document.getElementById("playBtn");
+        const $bestScore = document.getElementById("bestScore");
+        const $bestHolder = document.getElementById("bestHolder");
+
+        function renderAuthState() {
+            const email = getEmail();
+            if (isAuthed() && email) {
+                $userBadge.textContent = email;
+                $userBadge.hidden = false;
+                $logoutBtn.hidden = false;
+                $loginLink.hidden = true;
+            } else {
+                $userBadge.hidden = true;
+                $logoutBtn.hidden = true;
+                $loginLink.hidden = false;
+            }
+        }
+        renderAuthState();
+
+        $logoutBtn.addEventListener("click", async () => {
+            const r = getRefresh();
+            if (r) {
+                try {
+                    await fetch(`${API_BASE}/auth/logout`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ refresh_token: r }),
+                    });
+                } catch (_) {}
+            }
+            clearTokens();
+            renderAuthState();
+        });
+
+        $playBtn.addEventListener("click", (e) => {
+            if (!isAuthed()) {
+                e.preventDefault();
+                setFlash("플레이하려면 로그인이 필요합니다");
+                window.location.href = "login.html";
+            }
+        });
+
+        // ---- highest score ----
+        (async function loadBest() {
+            try {
+                const res = await publicFetch("/scores/highest");
+                if (!res.ok) {
+                    $bestScore.textContent = "—";
+                    $bestHolder.textContent = "서버 응답 없음";
+                    return;
+                }
+                const data = await res.json();
+                if (data == null) {
+                    $bestScore.textContent = "0";
+                    $bestHolder.textContent = "아직 기록 없음 — 첫 번째 주인공이 되어보세요";
+                    return;
+                }
+                $bestScore.textContent = data.score.toLocaleString();
+                $bestHolder.textContent = `by ${data.email}`;
+            } catch (_) {
+                $bestScore.textContent = "—";
+                $bestHolder.textContent = "서버 응답 없음";
+            }
+        })();
+    </script>
 </body>
 </html>

@@ -185,3 +185,251 @@ body {
         width: 300px;
     }
 }
+
+/* ============================================================
+   Top bar (play.html) — floats over the centered game layout
+   ============================================================ */
+.topbar {
+    position: fixed;
+    top: 14px;
+    left: 18px;
+    right: 18px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: none;
+    font-size: 0.9rem;
+}
+.topbar > * { pointer-events: auto; }
+
+.brand-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgba(26, 29, 46, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+.brand-link:hover {
+    color: var(--text);
+    border-color: var(--accent);
+}
+
+.user-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-badge {
+    padding: 5px 12px;
+    background: rgba(26, 29, 46, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--text);
+    font-size: 0.82rem;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.btn-link {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 5px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+.btn-link:hover {
+    color: var(--accent-2);
+    border-color: var(--accent-2);
+}
+
+/* ============================================================
+   Highlighted BEST stat
+   ============================================================ */
+.stat.highlight {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    background: linear-gradient(135deg, rgba(124, 131, 255, 0.18), rgba(255, 126, 182, 0.15));
+    border: 1px solid rgba(255, 126, 182, 0.35);
+}
+.stat.highlight .label em {
+    font-style: normal;
+    color: var(--text-muted);
+    font-weight: 400;
+    letter-spacing: normal;
+    margin-left: 4px;
+}
+.stat.highlight .value {
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-top: 2px;
+}
+.stat.highlight .sub {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ============================================================
+   Toast
+   ============================================================ */
+.toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--panel);
+    color: var(--text);
+    padding: 12px 20px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    font-size: 0.9rem;
+    z-index: 100;
+    max-width: 90vw;
+}
+.toast.error { border-color: rgba(232, 87, 105, 0.6); color: #ffcfd6; }
+.toast.success { border-color: rgba(92, 214, 107, 0.6); color: #c9f1d0; }
+.toast[hidden] { display: none; }
+
+/* ============================================================
+   Auth (login.html) page
+   ============================================================ */
+.auth-body {
+    /* body 의 flex 중앙정렬은 그대로 활용 */
+}
+
+.auth-wrapper {
+    width: 100%;
+    max-width: 420px;
+    padding: 24px;
+}
+
+.auth-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.auth-header { text-align: center; }
+.auth-header h1 {
+    font-size: 1.9rem;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+.auth-sub {
+    margin-top: 6px;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+}
+
+.auth-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    padding: 4px;
+    border-radius: 999px;
+}
+.auth-tab {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.auth-tab.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: white;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.auth-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+.auth-form label em {
+    font-style: normal;
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    opacity: 0.8;
+}
+.auth-form input {
+    padding: 11px 14px;
+    border: 1px solid var(--border);
+    background: #0e1020;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    color: var(--text);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.auth-form input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(124, 131, 255, 0.18);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(124, 131, 255, 0.35);
+}
+
+.auth-submit { margin-top: 6px; }
+
+.auth-note {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    line-height: 1.5;
+}

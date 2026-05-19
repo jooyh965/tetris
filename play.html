@@ -7,6 +7,14 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <header class="topbar">
+        <a class="brand-link" href="index.html">← 홈</a>
+        <div class="user-area">
+            <span id="userBadge" class="user-badge" hidden></span>
+            <button type="button" id="logoutBtn" class="btn-link" hidden>로그아웃</button>
+        </div>
+    </header>
+
     <main class="game">
         <section class="board-wrap">
             <canvas id="board" width="300" height="600" aria-label="Tetris board"></canvas>
@@ -21,6 +29,12 @@
 
         <aside class="sidebar">
             <h1>TETRIS</h1>
+
+            <div class="stat highlight">
+                <span class="label">BEST <em>(전체)</em></span>
+                <span class="value" id="bestScore">—</span>
+                <span class="sub" id="bestHolder"></span>
+            </div>
 
             <div class="stat">
                 <span class="label">SCORE</span>
@@ -54,6 +68,9 @@
         </aside>
     </main>
 
+    <div id="toast" class="toast" hidden></div>
+
+    <script src="api.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
