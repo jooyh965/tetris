@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS game_sessions (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id   INTEGER NOT NULL,
     score     INTEGER NOT NULL,
-    lines     INTEGER NOT NULL DEFAULT 0,
+    `lines`   INTEGER NOT NULL DEFAULT 0,
     level     INTEGER NOT NULL DEFAULT 1,
     played_at TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
@@ -79,7 +79,7 @@ _SCHEMA_MYSQL_STMTS = [
         id        INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
         user_id   INT NOT NULL,
         score     INT NOT NULL,
-        lines     INT NOT NULL DEFAULT 0,
+        `lines`   INT NOT NULL DEFAULT 0,
         level     INT NOT NULL DEFAULT 1,
         played_at VARCHAR(40) NOT NULL,
         KEY idx_game_sessions_score (score),

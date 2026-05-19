@@ -190,7 +190,7 @@ def me(user=Depends(get_current_user)):
 def submit_score(payload: ScoreIn, db=Depends(get_db), user=Depends(get_current_user)):
     now = _now_iso()
     cur = db.execute(
-        "INSERT INTO game_sessions (user_id, score, lines, level, played_at) "
+        "INSERT INTO game_sessions (user_id, score, `lines`, level, played_at) "
         "VALUES (?, ?, ?, ?, ?)",
         (user["id"], payload.score, payload.lines, payload.level, now),
     )
@@ -207,7 +207,7 @@ def submit_score(payload: ScoreIn, db=Depends(get_db), user=Depends(get_current_
 def highest_score(db=Depends(get_db)):
     """전체 사용자 중 최고 점수 1건을 반환. 기록이 없으면 null."""
     row = db.execute(
-        "SELECT s.score, s.lines, s.level, s.played_at, u.email "
+        "SELECT s.score, s.`lines`, s.level, s.played_at, u.email "
         "FROM game_sessions s "
         "JOIN users u ON u.id = s.user_id "
         "ORDER BY s.score DESC, s.played_at ASC "
@@ -233,7 +233,7 @@ def my_scores(
     """내 최근 게임 기록 (기본 20건, 최신순)."""
     limit = max(1, min(limit, 100))
     rows = db.execute(
-        "SELECT id, score, lines, level, played_at FROM game_sessions "
+        "SELECT id, score, `lines`, level, played_at FROM game_sessions "
         "WHERE user_id = ? ORDER BY played_at DESC LIMIT ?",
         (user["id"], limit),
     ).fetchall()
