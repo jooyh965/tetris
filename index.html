@@ -337,6 +337,83 @@
             white-space: nowrap;
             max-width: 100%;
         }
+
+        /* ---------- leaderboard ---------- */
+        .leaderboard-block { margin-top: 48px; }
+        .leaderboard {
+            max-width: 640px;
+            margin: 0 auto;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 16px;
+        }
+        .leaderboard-empty {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            padding: 22px 0;
+        }
+        .leaderboard ol {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .leaderboard li {
+            display: grid;
+            grid-template-columns: 44px 1fr auto;
+            gap: 14px;
+            align-items: center;
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: rgba(35, 39, 64, 0.5);
+            border: 1px solid transparent;
+            transition: background 0.15s ease, border-color 0.15s ease;
+        }
+        .leaderboard li:hover {
+            background: rgba(35, 39, 64, 0.85);
+        }
+        .leaderboard li.mine {
+            border-color: rgba(255, 126, 182, 0.6);
+            background: linear-gradient(135deg, rgba(124, 131, 255, 0.18), rgba(255, 126, 182, 0.15));
+        }
+        .leaderboard .rank {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 1rem;
+            font-weight: 800;
+            text-align: center;
+            color: var(--text-muted);
+        }
+        .leaderboard li.top1 .rank { color: #f0d44d; }   /* gold */
+        .leaderboard li.top2 .rank { color: #c0c4d6; }   /* silver */
+        .leaderboard li.top3 .rank { color: #d29466; }   /* bronze */
+        .leaderboard .who {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+        .leaderboard .who .email {
+            font-size: 0.92rem;
+            color: var(--text);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .leaderboard .who .meta {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+        .leaderboard .score {
+            font-variant-numeric: tabular-nums;
+            font-size: 1.1rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
     </style>
 </head>
 <body>
@@ -419,6 +496,15 @@
                 <div class="cell b" style="background: var(--c-z)"></div>
             </div>
         </header>
+
+        <!-- ============ LEADERBOARD ============ -->
+        <section class="block leaderboard-block">
+            <h2>TOP 10 LEADERBOARD</h2>
+            <div id="leaderboard" class="leaderboard">
+                <p class="leaderboard-empty" id="leaderboardStatus">불러오는 중…</p>
+                <ol id="leaderboardList" hidden></ol>
+            </div>
+        </section>
 
         <!-- ============ FEATURES ============ -->
         <section class="block">
@@ -533,6 +619,59 @@
             } catch (_) {
                 $bestScore.textContent = "—";
                 $bestHolder.textContent = "서버 응답 없음";
+            }
+        })();
+
+        // ---- leaderboard (top 10) ----
+        const $lbStatus = document.getElementById("leaderboardStatus");
+        const $lbList = document.getElementById("leaderboardList");
+
+        function rankBadge(rank) {
+            if (rank === 1) return "🥇";
+            if (rank === 2) return "🥈";
+            if (rank === 3) return "🥉";
+            return `#${rank}`;
+        }
+
+        function escapeHtml(s) {
+            return s.replace(/[&<>"']/g, c => ({
+                "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+            }[c]));
+        }
+
+        (async function loadLeaderboard() {
+            try {
+                const res = await publicFetch("/scores/top?limit=10");
+                if (!res.ok) {
+                    $lbStatus.textContent = `서버 응답 없음 (HTTP ${res.status})`;
+                    return;
+                }
+                const rows = await res.json();
+                if (!rows.length) {
+                    $lbStatus.textContent = "아직 기록이 없습니다 — 첫 게임을 플레이해보세요";
+                    return;
+                }
+                const myEmail = getEmail();
+                $lbList.innerHTML = rows.map(r => {
+                    const cls = [
+                        r.rank <= 3 ? `top${r.rank}` : "",
+                        myEmail && r.email === myEmail ? "mine" : "",
+                    ].filter(Boolean).join(" ");
+                    return `
+                        <li class="${cls}">
+                            <span class="rank">${rankBadge(r.rank)}</span>
+                            <span class="who">
+                                <span class="email">${escapeHtml(r.email)}</span>
+                                <span class="meta">${r.lines} lines · LV ${r.level}</span>
+                            </span>
+                            <span class="score">${r.score.toLocaleString()}</span>
+                        </li>
+                    `;
+                }).join("");
+                $lbStatus.hidden = true;
+                $lbList.hidden = false;
+            } catch (_) {
+                $lbStatus.textContent = "서버 응답 없음";
             }
         })();
     </script>

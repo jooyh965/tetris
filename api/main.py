@@ -90,6 +90,15 @@ class HighScoreOut(BaseModel):
     email: EmailStr  # 표시용. 원하면 익명화 가능
 
 
+class TopScoreOut(BaseModel):
+    rank: int
+    score: int
+    lines: int
+    level: int
+    played_at: datetime
+    email: EmailStr
+
+
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -201,6 +210,31 @@ def submit_score(payload: ScoreIn, db=Depends(get_db), user=Depends(get_current_
         level=payload.level,
         played_at=now,
     )
+
+
+@app.get("/scores/top", response_model=list[TopScoreOut])
+def top_scores(limit: int = 10, db=Depends(get_db)):
+    """전체 사용자 상위 N개 게임 기록. score DESC, tie 는 먼저 친 사람 우선."""
+    limit = max(1, min(limit, 100))
+    rows = db.execute(
+        "SELECT s.score, s.`lines`, s.level, s.played_at, u.email "
+        "FROM game_sessions s "
+        "JOIN users u ON u.id = s.user_id "
+        "ORDER BY s.score DESC, s.played_at ASC "
+        "LIMIT ?",
+        (limit,),
+    ).fetchall()
+    return [
+        TopScoreOut(
+            rank=i + 1,
+            score=r["score"],
+            lines=r["lines"],
+            level=r["level"],
+            played_at=r["played_at"],
+            email=r["email"],
+        )
+        for i, r in enumerate(rows)
+    ]
 
 
 @app.get("/scores/highest", response_model=Optional[HighScoreOut])
