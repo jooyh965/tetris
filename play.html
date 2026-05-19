@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="game">
+        <section class="board-wrap">
+            <canvas id="board" width="300" height="600" aria-label="Tetris board"></canvas>
+
+            <div id="overlay" class="overlay" hidden>
+                <div class="overlay-card">
+                    <h2 id="overlayTitle">PAUSED</h2>
+                    <p id="overlaySub">P 키로 계속</p>
+                </div>
+            </div>
+        </section>
+
+        <aside class="sidebar">
+            <h1>TETRIS</h1>
+
+            <div class="stat">
+                <span class="label">SCORE</span>
+                <span class="value" id="score">0</span>
+            </div>
+            <div class="stat">
+                <span class="label">LEVEL</span>
+                <span class="value" id="level">1</span>
+            </div>
+            <div class="stat">
+                <span class="label">LINES</span>
+                <span class="value" id="lines">0</span>
+            </div>
+
+            <div class="next-block">
+                <span class="label">NEXT</span>
+                <canvas id="next" width="120" height="120"></canvas>
+            </div>
+
+            <div class="controls">
+                <h3>조작</h3>
+                <dl>
+                    <dt>← →</dt><dd>이동</dd>
+                    <dt>↓</dt><dd>소프트 드롭</dd>
+                    <dt>↑</dt><dd>회전</dd>
+                    <dt>Space</dt><dd>하드 드롭</dd>
+                    <dt>P</dt><dd>일시정지</dd>
+                    <dt>R</dt><dd>재시작</dd>
+                </dl>
+            </div>
+        </aside>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

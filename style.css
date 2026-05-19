@@ -1,0 +1,187 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg: #0f111a;
+    --panel: #1a1d2e;
+    --panel-2: #232740;
+    --border: #2e3454;
+    --text: #e8eaf6;
+    --text-muted: #8b8fb0;
+    --accent: #7c83ff;
+    --accent-2: #ff7eb6;
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR",
+        Roboto, Helvetica, Arial, sans-serif;
+    background:
+        radial-gradient(circle at 20% 10%, #2a2057 0%, transparent 55%),
+        radial-gradient(circle at 85% 90%, #1f3f5c 0%, transparent 50%),
+        var(--bg);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    min-height: 100vh;
+}
+
+.game {
+    display: flex;
+    gap: 28px;
+    align-items: flex-start;
+}
+
+.board-wrap {
+    position: relative;
+}
+
+#board {
+    display: block;
+    background: #06070d;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(6, 7, 13, 0.78);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-radius: 10px;
+}
+
+.overlay[hidden] {
+    display: none;
+}
+
+.overlay-card {
+    text-align: center;
+}
+
+.overlay-card h2 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 8px;
+}
+
+.overlay-card p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+.sidebar {
+    width: 220px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.sidebar h1 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-align: center;
+    margin-bottom: 4px;
+}
+
+.stat {
+    background: var(--panel-2);
+    padding: 10px 14px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.label {
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    color: var(--text-muted);
+}
+
+.stat .value {
+    font-variant-numeric: tabular-nums;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.next-block {
+    background: var(--panel-2);
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+#next {
+    background: #06070d;
+    border-radius: 6px;
+}
+
+.controls h3 {
+    font-size: 0.78rem;
+    letter-spacing: 0.16em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.controls dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 12px;
+    font-size: 0.85rem;
+}
+
+.controls dt {
+    font-weight: 700;
+    color: var(--accent);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.controls dd {
+    color: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+    body {
+        padding: 12px;
+    }
+    .game {
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+    }
+    .sidebar {
+        width: 300px;
+    }
+}

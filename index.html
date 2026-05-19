@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TETRIS · 시작하기</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #0f111a;
+            --panel: #1a1d2e;
+            --panel-2: #232740;
+            --border: #2e3454;
+            --text: #e8eaf6;
+            --text-muted: #8b8fb0;
+            --accent: #7c83ff;
+            --accent-2: #ff7eb6;
+
+            --c-i: #3ad6e0;
+            --c-o: #f0d44d;
+            --c-t: #b566d9;
+            --c-s: #5cd66b;
+            --c-z: #e85769;
+            --c-j: #5b8bf0;
+            --c-l: #f0a04b;
+        }
+
+        html, body { min-height: 100vh; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR",
+                Roboto, Helvetica, Arial, sans-serif;
+            background:
+                radial-gradient(circle at 18% 12%, #2a2057 0%, transparent 55%),
+                radial-gradient(circle at 85% 88%, #1f3f5c 0%, transparent 50%),
+                var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* ---------- floating decorative blocks ---------- */
+        .float-blocks {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .float-blocks span {
+            position: absolute;
+            width: 38px;
+            height: 38px;
+            opacity: 0.18;
+            border-radius: 4px;
+            animation: floatY 14s linear infinite;
+        }
+        .float-blocks span:nth-child(1) { left: 6%;  top: -50px; background: var(--c-i); animation-duration: 16s; }
+        .float-blocks span:nth-child(2) { left: 22%; top: -50px; background: var(--c-t); animation-duration: 22s; animation-delay: -4s; }
+        .float-blocks span:nth-child(3) { left: 42%; top: -50px; background: var(--c-o); animation-duration: 18s; animation-delay: -10s; }
+        .float-blocks span:nth-child(4) { left: 60%; top: -50px; background: var(--c-l); animation-duration: 24s; animation-delay: -2s; }
+        .float-blocks span:nth-child(5) { left: 78%; top: -50px; background: var(--c-s); animation-duration: 20s; animation-delay: -8s; }
+        .float-blocks span:nth-child(6) { left: 90%; top: -50px; background: var(--c-z); animation-duration: 17s; animation-delay: -12s; }
+
+        @keyframes floatY {
+            0%   { transform: translateY(0) rotate(0deg);   }
+            100% { transform: translateY(110vh) rotate(360deg); }
+        }
+
+        /* ---------- layout ---------- */
+        .wrap {
+            position: relative;
+            z-index: 1;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 56px 24px 80px;
+        }
+
+        /* ---------- hero ---------- */
+        .hero {
+            text-align: center;
+            padding: 40px 0 56px;
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 0.72rem;
+            letter-spacing: 0.22em;
+            color: var(--text-muted);
+            padding: 5px 14px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.02);
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            font-size: clamp(3.2rem, 9vw, 5.5rem);
+            font-weight: 900;
+            letter-spacing: 0.16em;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1;
+            margin-bottom: 18px;
+            animation: pulse 3.6s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { filter: drop-shadow(0 0 18px rgba(124, 131, 255, 0.35)); }
+            50%      { filter: drop-shadow(0 0 32px rgba(255, 126, 182, 0.55)); }
+        }
+
+        .hero p.lead {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 520px;
+            margin: 0 auto 40px;
+            line-height: 1.7;
+        }
+
+        .play-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 42px;
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            color: white;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border-radius: 999px;
+            box-shadow: 0 12px 32px rgba(124, 131, 255, 0.35);
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+        .play-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 18px 40px rgba(255, 126, 182, 0.45);
+        }
+        .play-btn .arrow {
+            display: inline-block;
+            transition: transform 0.2s ease;
+        }
+        .play-btn:hover .arrow { transform: translateX(4px); }
+
+        /* ---------- preview piece grid ---------- */
+        .preview {
+            margin: 56px auto 0;
+            display: grid;
+            grid-template-columns: repeat(10, 30px);
+            grid-auto-rows: 30px;
+            gap: 2px;
+            width: fit-content;
+            padding: 16px;
+            background: rgba(6, 7, 13, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+        .preview .cell {
+            background: rgba(255, 255, 255, 0.025);
+            border-radius: 3px;
+        }
+        .preview .cell.b {
+            box-shadow: inset 0 2px 0 rgba(255,255,255,0.18), inset 0 -2px 0 rgba(0,0,0,0.25);
+        }
+
+        /* ---------- sections ---------- */
+        section.block {
+            margin-top: 72px;
+        }
+        section.block h2 {
+            font-size: 0.82rem;
+            letter-spacing: 0.22em;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+        }
+        .feature {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .feature .icon {
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+        }
+        .feature h3 {
+            font-size: 0.98rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .feature p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.55;
+        }
+
+        /* ---------- controls grid ---------- */
+        .controls {
+            max-width: 540px;
+            margin: 0 auto;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px 28px;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 10px 24px;
+            align-items: center;
+        }
+        .controls kbd {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--accent);
+            padding: 4px 10px;
+            background: var(--panel-2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            min-width: 56px;
+            text-align: center;
+        }
+        .controls span {
+            color: var(--text-muted);
+            font-size: 0.92rem;
+        }
+
+        /* ---------- footer ---------- */
+        footer {
+            margin-top: 80px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            letter-spacing: 0.08em;
+        }
+
+        @media (max-width: 640px) {
+            .preview { transform: scale(0.85); }
+            .controls { padding: 18px; gap: 8px 14px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .float-blocks span { animation: none; }
+            .hero h1 { animation: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="float-blocks" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+
+    <div class="wrap">
+        <!-- ============ HERO ============ -->
+        <header class="hero">
+            <span class="badge">KOSA · VIBE CODING 2026</span>
+            <h1>TETRIS</h1>
+            <p class="lead">
+                클래식한 블록 퍼즐을 브라우저에서 바로.<br>
+                설치 없이 즉시 플레이하세요.
+            </p>
+            <a class="play-btn" href="play.html">
+                PLAY <span class="arrow">→</span>
+            </a>
+
+            <!-- 데코용 미니 보드 (T 스핀 모양) -->
+            <div class="preview" aria-hidden="true">
+                <!-- row1 -->
+                <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                <div class="cell b" style="background: var(--c-i)"></div>
+                <div class="cell b" style="background: var(--c-i)"></div>
+                <div class="cell b" style="background: var(--c-i)"></div>
+                <div class="cell b" style="background: var(--c-i)"></div>
+                <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                <!-- row2 -->
+                <div class="cell"></div>
+                <div class="cell b" style="background: var(--c-t)"></div>
+                <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell b" style="background: var(--c-o)"></div>
+                <div class="cell b" style="background: var(--c-o)"></div>
+                <div class="cell"></div>
+                <!-- row3 -->
+                <div class="cell b" style="background: var(--c-t)"></div>
+                <div class="cell b" style="background: var(--c-t)"></div>
+                <div class="cell b" style="background: var(--c-t)"></div>
+                <div class="cell"></div>
+                <div class="cell b" style="background: var(--c-s)"></div>
+                <div class="cell b" style="background: var(--c-s)"></div>
+                <div class="cell"></div>
+                <div class="cell b" style="background: var(--c-o)"></div>
+                <div class="cell b" style="background: var(--c-o)"></div>
+                <div class="cell"></div>
+                <!-- row4 -->
+                <div class="cell b" style="background: var(--c-l)"></div>
+                <div class="cell"></div><div class="cell"></div>
+                <div class="cell b" style="background: var(--c-s)"></div>
+                <div class="cell b" style="background: var(--c-s)"></div>
+                <div class="cell"></div>
+                <div class="cell b" style="background: var(--c-j)"></div>
+                <div class="cell"></div><div class="cell"></div>
+                <div class="cell b" style="background: var(--c-z)"></div>
+                <!-- row5 -->
+                <div class="cell b" style="background: var(--c-l)"></div>
+                <div class="cell b" style="background: var(--c-l)"></div>
+                <div class="cell b" style="background: var(--c-l)"></div>
+                <div class="cell"></div><div class="cell"></div>
+                <div class="cell b" style="background: var(--c-j)"></div>
+                <div class="cell b" style="background: var(--c-j)"></div>
+                <div class="cell b" style="background: var(--c-j)"></div>
+                <div class="cell b" style="background: var(--c-z)"></div>
+                <div class="cell b" style="background: var(--c-z)"></div>
+            </div>
+        </header>
+
+        <!-- ============ FEATURES ============ -->
+        <section class="block">
+            <h2>핵심 기능</h2>
+            <div class="features">
+                <div class="feature">
+                    <div class="icon">🎲</div>
+                    <h3>7-Bag 랜덤</h3>
+                    <p>한 사이클 안에 모든 블록이 정확히 한 번씩 등장해, 운에 휘둘리지 않는 공정한 분배.</p>
+                </div>
+                <div class="feature">
+                    <div class="icon">👻</div>
+                    <h3>고스트 피스</h3>
+                    <p>현재 블록이 떨어질 위치를 미리 보여줘 정확한 배치를 도와줍니다.</p>
+                </div>
+                <div class="feature">
+                    <div class="icon">🔄</div>
+                    <h3>벽 킥 회전</h3>
+                    <p>벽이나 다른 블록에 막혔을 때도 옆으로 살짝 밀어 회전을 성공시킵니다.</p>
+                </div>
+                <div class="feature">
+                    <div class="icon">⚡</div>
+                    <h3>레벨 가속</h3>
+                    <p>10라인마다 레벨업, 낙하 속도가 빨라지며 점수도 배수로 증가합니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ CONTROLS ============ -->
+        <section class="block">
+            <h2>조작 키</h2>
+            <div class="controls">
+                <kbd>← →</kbd><span>좌우 이동</span>
+                <kbd>↓</kbd><span>소프트 드롭</span>
+                <kbd>↑</kbd><span>회전</span>
+                <kbd>Space</kbd><span>하드 드롭</span>
+                <kbd>P</kbd><span>일시정지</span>
+                <kbd>R</kbd><span>재시작</span>
+            </div>
+        </section>
+
+        <footer>
+            © 2026 jooyh965 · KOSA 바이브 코딩 과정
+        </footer>
+    </div>
+</body>
+</html>
