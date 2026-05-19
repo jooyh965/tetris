@@ -4,7 +4,12 @@
 
 ## 라이브 데모
 
-🎮 **(배포 URL은 GitHub Pages 활성화 후 업데이트)**
+🎮 **https://jooyh965.github.io/tetris/**
+
+- 인트로(랜딩): [/](https://jooyh965.github.io/tetris/)
+- 게임 본문: [/play.html](https://jooyh965.github.io/tetris/play.html)
+
+배포: GitHub Actions 워크플로(`.github/workflows/deploy.yml`)가 `main` 브랜치 push 시 자동 실행.
 
 ## 로컬 실행
 
