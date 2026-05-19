@@ -4,3 +4,4 @@ python-jose[cryptography]==3.3.0
 bcrypt==4.2.0
 python-multipart==0.0.20
 email-validator==2.2.0
+pymysql==1.1.1
